@@ -36,6 +36,18 @@ A fully local, privacy-first speech-to-text application with an Eluma-branded we
 - **Copy to Clipboard** — One-click copy with toast notification
 - **Single Command Start** — `./start.sh` launches server and opens browser
 
+## Screenshots
+
+<div align="center">
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset=".github/assets/screenshot-2.png">
+  <source media="(prefers-color-scheme: light)" srcset=".github/assets/screenshot-1.png">
+  <img alt="eluma-sst UI" src=".github/assets/screenshot-1.png" width="90%">
+</picture>
+
+<sub>Eluma-branded dark theme with glassmorphism design</sub>
+</div>
+
 ## Quick Start
 
 ```bash
