@@ -1,0 +1,67 @@
+{
+  "fps": 30,
+  "width": 1080,
+  "height": 1920,
+  "duration": 60,
+  "scenes": [
+    {
+      "id": "hook",
+      "start": 0,
+      "end": 5,
+      "type": "text-overlay",
+      "text": "Sprachnachrichten transkribieren\n100% lokal",
+      "background": "#0f172a",
+      "accent": "#4fd1c5"
+    },
+    {
+      "id": "problem",
+      "start": 5,
+      "end": 15,
+      "type": "split-screen",
+      "left": "telegram-voice-message",
+      "right": "cloud-warning-icon",
+      "text": "Online = Deine Daten auf fremden Servern"
+    },
+    {
+      "id": "terminal",
+      "start": 15,
+      "end": 20,
+      "type": "terminal-recording",
+      "command": "./start.sh",
+      "output": "ELUMA STT - Local Speech to Text\nServer: http://localhost:5001"
+    },
+    {
+      "id": "app-demo-mic",
+      "start": 20,
+      "end": 33,
+      "type": "screen-recording",
+      "url": "http://localhost:5001",
+      "actions": ["click-mic", "speak", "stop", "show-result"]
+    },
+    {
+      "id": "app-demo-upload",
+      "start": 33,
+      "end": 42,
+      "type": "screen-recording",
+      "url": "http://localhost:5001",
+      "actions": ["switch-tab", "drag-drop-ogg", "show-result", "copy"]
+    },
+    {
+      "id": "features",
+      "start": 42,
+      "end": 50,
+      "type": "feature-list",
+      "items": ["5 Sprachen", "Drag & Drop", ".ogg .mp3 .wav", "Kostenlos"],
+      "animation": "stagger-fade"
+    },
+    {
+      "id": "cta",
+      "start": 50,
+      "end": 60,
+      "type": "cta",
+      "text": "github.com/alphinus/eluma-sst",
+      "subtext": "Star if you like it",
+      "logo": "eluma"
+    }
+  ]
+}
