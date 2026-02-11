@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>STT Test App</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            max-width: 600px;
+            width: 100%;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2em;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 40px;
+        }
+
+        .record-section {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        #recordBtn {
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 120px;
+            height: 120px;
+            font-size: 3em;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        #recordBtn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 15px 40px rgba(102, 126, 234, 0.6);
+        }
+
+        #recordBtn.recording {
+            background: #e74c3c;
+            animation: pulse 1.5s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .status {
+            text-align: center;
+            margin: 20px 0;
+            font-size: 1.2em;
+            color: #666;
+            min-height: 30px;
+        }
+
+        .status.recording {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+
+        .status.processing {
+            color: #f39c12;
+            font-weight: bold;
+        }
+
+        .output {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 20px;
+            min-height: 100px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .output.show {
+            display: block;
+            animation: fadeIn 0.5s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .output-label {
+            font-weight: bold;
+            color: #667eea;
+            margin-bottom: 10px;
+        }
+
+        .output-text {
+            font-size: 1.1em;
+            color: #333;
+            line-height: 1.6;
+        }
+
+        .language-select {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        select {
+            padding: 10px 20px;
+            border: 2px solid #667eea;
+            border-radius: 10px;
+            font-size: 1em;
+            background: white;
+            cursor: pointer;
+            color: #333;
+        }
+
+        .info {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 0.9em;
+            color: #999;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎙️ STT Test App</h1>
+        <p class="subtitle">Drücke den Button, sprich, und sieh die Transkription!</p>
+
+        <div class="language-select">
+            <select id="language">
+                <option value="de">🇩🇪 Deutsch</option>
+                <option value="en">🇬🇧 English</option>
+                <option value="fr">🇫🇷 Français</option>
+                <option value="es">🇪🇸 Español</option>
+                <option value="it">🇮🇹 Italiano</option>
+            </select>
+        </div>
+
+        <div class="record-section">
+            <button id="recordBtn">🎤</button>
+        </div>
+
+        <div class="status" id="status">Bereit zum Aufnehmen</div>
+
+        <div class="output" id="output">
+            <div class="output-label">📝 Transkription:</div>
+            <div class="output-text" id="transcription"></div>
+        </div>
+
+        <div class="info">
+            Kostenlos • Lokal • Privat
+        </div>
+    </div>
+
+    <script>
+        let mediaRecorder;
+        let audioChunks = [];
+        const recordBtn = document.getElementById('recordBtn');
+        const status = document.getElementById('status');
+        const output = document.getElementById('output');
+        const transcription = document.getElementById('transcription');
+        const languageSelect = document.getElementById('language');
+
+        recordBtn.addEventListener('click', async () => {
+            if (!mediaRecorder || mediaRecorder.state === 'inactive') {
+                startRecording();
+            } else {
+                stopRecording();
+            }
+        });
+
+        async function startRecording() {
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                mediaRecorder = new MediaRecorder(stream);
+                audioChunks = [];
+
+                mediaRecorder.ondataavailable = (event) => {
+                    audioChunks.push(event.data);
+                };
+
+                mediaRecorder.onstop = async () => {
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                    await transcribeAudio(audioBlob);
+
+                    // Stop all tracks
+                    stream.getTracks().forEach(track => track.stop());
+                };
+
+                mediaRecorder.start();
+                recordBtn.classList.add('recording');
+                recordBtn.textContent = '⏹️';
+                status.textContent = 'Aufnahme läuft... (Klick zum Stoppen)';
+                status.className = 'status recording';
+                output.classList.remove('show');
+            } catch (error) {
+                status.textContent = '❌ Fehler: Mikrofon-Zugriff verweigert';
+                console.error('Error accessing microphone:', error);
+            }
+        }
+
+        function stopRecording() {
+            mediaRecorder.stop();
+            recordBtn.classList.remove('recording');
+            recordBtn.textContent = '🎤';
+            status.textContent = '⏳ Transkribiere...';
+            status.className = 'status processing';
+        }
+
+        async function transcribeAudio(audioBlob) {
+            const formData = new FormData();
+            formData.append('audio', audioBlob, 'recording.wav');
+            formData.append('language', languageSelect.value);
+
+            try {
+                const response = await fetch('http://localhost:5001/transcribe', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    transcription.textContent = result.transcription;
+                    output.classList.add('show');
+                    status.textContent = '✅ Fertig!';
+                    status.className = 'status';
+                } else {
+                    status.textContent = '❌ Fehler: ' + result.error;
+                    status.className = 'status';
+                }
+            } catch (error) {
+                status.textContent = '❌ Fehler: Server nicht erreichbar';
+                console.error('Error:', error);
+            }
+        }
+    </script>
+</body>
+</html>
